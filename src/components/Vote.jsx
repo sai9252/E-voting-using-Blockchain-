@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Vote = () => {
     const { user } = useContext(AuthContext);
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const [candidates, setCandidates] = useState([]);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [hasVoted, setHasVoted] = useState(false);
@@ -52,7 +52,7 @@ const Vote = () => {
         }
 
         if (hasVoted) {
-            setVotingMessage('You have already voted');
+            setVotingMessage('');
             return;
         }
 

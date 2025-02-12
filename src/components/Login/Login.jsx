@@ -1,14 +1,17 @@
 // Login.js
 import { useContext,useState } from 'react';
 import { AuthContext } from '../AuthContext';
+import { useNavigate } from 'react-router-dom';
+
 
 const Login = () => {
     const [formData, setFormData] = useState({
         aadhar: '',
         password: '',
     });
-
-        const { login } = useContext(AuthContext);
+    
+    const { login } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -20,7 +23,7 @@ const Login = () => {
         try {
             const response = await fetch('http://localhost:5000/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', },
                 body: JSON.stringify(formData),
             });
 
@@ -34,9 +37,9 @@ const Login = () => {
                 console.log('Login user:', user);
                 localStorage.setItem('user', JSON.stringify(user));
 
-                login({ ...data.user, aadhar });
+                login({ ...data.user });
 
-                window.location.href = '/vote';
+                navigate(`/user-dashboard?id=${user.userId}`)
 
                 alert(data.message);
                 // Redirect to dashboard or home page
@@ -75,6 +78,11 @@ const Login = () => {
                     <button type="submit" className="w-full p-3 bg-pink-500 text-white font-bold rounded hover:bg-pink-600">
                         Login
                     </button>
+                    <div className="text-center mt-4">Dont have an account?&nbsp;
+                        <a href="/" className="text-blue-500 hover:text-blue-700">
+                            Register
+                        </a>
+                    </div>
                 </form>
             </div>
         </div>

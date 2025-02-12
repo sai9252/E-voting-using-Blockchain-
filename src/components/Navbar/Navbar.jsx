@@ -21,7 +21,7 @@ const Navbar = () => {
                     <>
                     <div className='flex flex-row space-x-10 p-3 mr-30'>
                         <li>
-                            <Link to="/" className="text-white px-4 py-2 text-lg">Login</Link>
+                            <Link to="/login" className="text-white px-4 py-2 text-lg">Login</Link>
                         </li>
                         <li>
                             <Link to="/admin-login" className="text-white px-4 py-2 text-lg">Admin Login</Link>
@@ -42,7 +42,7 @@ const Navbar = () => {
                 {user && user.role === 'ADMIN' && (
                     <>
                         <li>
-                            <Link to="/register" className="text-white px-4 py-2 text-lg">Add Voters</Link>
+                            <Link to="/admin-dashboard" className="text-white px-4 py-2 text-lg">Verify Voters</Link>
                         </li>
                         <li>
                             <Link to="/add-candidates" className="text-white px-4 py-2 text-lg">Add Candidates</Link>
