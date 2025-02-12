@@ -25,6 +25,7 @@ dist-ssr
 
 Backend/uploads/
 Backend/.env
+./Backend/.env/
 */.env
 
 
