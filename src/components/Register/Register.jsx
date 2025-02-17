@@ -16,7 +16,7 @@ const Register = () => {
         voterId: null,
     });
 
-
+    const [loading, setLoading] = useState(false);
     const [aadharFileName, setAadharFileName] = useState("");
     const [voterIdFileName, setVoterIdFileName] = useState("");
     const [otpSent, setOtpSent] = useState(false);
@@ -37,7 +37,7 @@ const Register = () => {
             setVoterIdFileName(file ? file.name : "");
             setFormData({ ...formData, voterId: file || null });
         } else if (id === 'aadhar') {
-            setFormData({ ...formData, [id]: value.length >12 ? value.substring(0,12) : value || null });
+            setFormData({ ...formData, [id]: value.length > 12 ? value.substring(0, 12) : value || null });
         } else {
             setFormData({ ...formData, [id]: value });
         }
@@ -85,6 +85,7 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const formDataToSend = new FormData();
             formDataToSend.append('name', formData.name);
@@ -118,8 +119,10 @@ const Register = () => {
                 navigate('/login');
             }
         } catch (error) {
-                setRegistrationStatus({ success: false, message: error.response.data.message });
-        
+            setRegistrationStatus({ success: false, message: error.response.data.message });
+
+        }finally{
+            setLoading(false);
         }
     };
 
@@ -136,7 +139,7 @@ const Register = () => {
         isPhoneVerified;
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-pink-500 to-orange-500 w-full">
+        <div className="flex justify-center items-center min-h-screen bg-gray-100 w-full">
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-[45rem]">
                 <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Voters Registration</h2>
                 <form id="registerForm" className="space-y-4" onSubmit={handleSubmit}>
@@ -147,7 +150,7 @@ const Register = () => {
                                 id="name"
                                 placeholder="Full Name"
                                 required
-                                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                                className="w-full p-3 border border-gray-400 rounded focus:outline-none focus:border-blue-500"
                                 value={formData.name}
                                 onChange={handleChange}
                             />
@@ -156,7 +159,7 @@ const Register = () => {
                                 id="email"
                                 placeholder="Email"
                                 required
-                                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                                className="w-full p-3 border border-gray-400 rounded focus:outline-none focus:border-blue-500"
                                 value={formData.email}
                                 onChange={handleChange}
                             />
@@ -168,7 +171,8 @@ const Register = () => {
                                     id="phoneNumber"
                                     placeholder="Phone Number"
                                     required
-                                    className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                                    defaultCountry='IN'
+                                    className="w-full p-3 border border-gray-400 rounded focus:outline-none focus:border-blue-500"
                                     value={formData.phoneNumber}
                                     onChange={(value) => setFormData({ ...formData, phoneNumber: value })}
                                     disabled={isPhoneVerified}
@@ -191,7 +195,7 @@ const Register = () => {
                                         placeholder="Enter OTP"
                                         value={otp}
                                         onChange={(e) => setOtp(e.target.value)}
-                                        className="w-full p-1 border border-gray-300 rounded"
+                                        className="w-full p-1 border border-gray-400 rounded"
                                     />
                                     <button type="button" onClick={handleVerifyOtp} className="p-1 bg-green-500 text-white rounded-lg h-10 w-40 flex items-center justify-center">
                                         Submit OTP
@@ -211,7 +215,7 @@ const Register = () => {
                                 id="aadhar"
                                 placeholder="Aadhar Number"
                                 required
-                                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                                className="w-full p-3 border border-gray-400 rounded focus:outline-none focus:border-blue-500"
                                 value={formData.aadhar}
                                 onChange={handleChange}
                             />
@@ -224,7 +228,7 @@ const Register = () => {
                                     type="date"
                                     id="dateOfBirth"
                                     required
-                                    className="w-full p-3 border border-gray-300 text-gray-400 rounded focus:outline-none focus:border-blue-500"
+                                    className="w-full p-3 border border-gray-400 text-gray-400 rounded focus:outline-none focus:border-blue-500"
                                     value={formData.dateOfBirth}
                                     onChange={handleChange}
                                 />
@@ -243,7 +247,7 @@ const Register = () => {
                                         className="absolute opacity-0 w-full h-full cursor-pointer"
                                         onChange={handleChange}
                                     />
-                                    <div className="w-full p-3 border border-gray-300 text-gray-400 rounded focus:outline-none focus:border-blue-500 bg-white cursor-pointer">
+                                    <div className="w-full p-3 border border-gray-400 text-gray-400 rounded focus:outline-none focus:border-blue-500 bg-white cursor-pointer">
                                         {aadharFileName || "Upload Aadhar Document"}
                                     </div>
                                 </div>
@@ -262,7 +266,7 @@ const Register = () => {
                                         className="absolute opacity-0 w-full h-full cursor-pointer"
                                         onChange={handleChange}
                                     />
-                                    <div className="w-full p-3 border border-gray-300 text-gray-400 rounded focus:outline-none focus:border-blue-500 bg-white cursor-pointer">
+                                    <div className="w-full p-3 border border-gray-400 text-gray-400 rounded focus:outline-none focus:border-blue-500 bg-white cursor-pointer">
                                         {voterIdFileName || "Upload Voter ID Document"}
                                     </div>
                                 </div>
@@ -276,7 +280,7 @@ const Register = () => {
                             id="password"
                             placeholder="Password"
                             required
-                            className="w-80 p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                            className="w-80 p-3 border border-gray-400 rounded focus:outline-none focus:border-blue-500"
                             value={formData.password}
                             onChange={handleChange}
                         />
@@ -289,9 +293,10 @@ const Register = () => {
                         </p>
                     )}
 
-                    <button type="submit" disabled={!isFormValid} className={`w-full p-3 text-white font-bold rounded ${isFormValid ? "bg-pink-500 hover:bg-pink-600" : "bg-gray-400 cursor-not-allowed"}`}>
-                        Register
-                    </button>
+                    {loading ? <p className="text-gray-700 flex items-center justify-center text-2xl">Loading ...</p>
+                        : <button type="submit" disabled={!isFormValid} className={`w-full p-3 text-white font-bold rounded ${isFormValid ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-400 cursor-not-allowed"}`}>
+                            Register
+                        </button>}
                     <div className="text-center">Already have an account? &nbsp;
                         <a href="/login" className="text-blue-500 hover:text-blue-700">
                             Login

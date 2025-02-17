@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
+import { RiIdCardFill } from 'react-icons/ri';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
@@ -15,7 +16,9 @@ const Navbar = () => {
         <nav className="bg-gray-800 p-4">
             <ul className="flex justify-between items-center">
                 <li className='p-3 text-white text-2xl font-bold ml-10'>
+                    {user && user?.userId ? <a href={`/user-dashboard?id=${user.userId}`}>
                     E-VOTING
+                    </a> : <a href='/admin-dashboard'>E-VOTING</a>}
                 </li>
                 {!user && (
                     <>
@@ -31,12 +34,10 @@ const Navbar = () => {
                 )}
                 {user && user.role === 'VOTER' && (
                     <>
-                        <li>
-                            <Link to="/vote" className="text-white px-4 py-2 text-lg">Vote</Link>
-                        </li>
-                        <li>
-                            <Link to="/results" className="text-white px-4 py-2 text-lg">Results</Link>
-                        </li>
+                    <div className='flex -flex-col space-x-3'>
+                        <h1 className='text-4xl text-pink-500 font-serif'>Welcome, Voter </h1>
+                        <i className="ri-id-card-fill flex items-center"> <RiIdCardFill size={36} color="white"/></i>
+                        </div>
                     </>
                 )}
                 {user && user.role === 'ADMIN' && (
@@ -45,10 +46,7 @@ const Navbar = () => {
                             <Link to="/admin-dashboard" className="text-white px-4 py-2 text-lg">Verify Voters</Link>
                         </li>
                         <li>
-                            <Link to="/add-candidates" className="text-white px-4 py-2 text-lg">Add Candidates</Link>
-                        </li>
-                        <li>
-                            <Link to="/results" className="text-white px-4 py-2 text-lg">Results</Link>
+                            <Link to="/election-dashboard" className="text-white px-4 py-2 text-lg">Add Elections/Results</Link>
                         </li>
                     </>
                 )}

@@ -1,7 +1,9 @@
 // Login.js
-import { useContext,useState } from 'react';
+import { useContext, useState } from 'react';
 import { AuthContext } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
+
+
 
 
 const Login = () => {
@@ -9,7 +11,8 @@ const Login = () => {
         aadhar: '',
         password: '',
     });
-    
+    const [loading, setLoading] = useState(false);
+
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -19,7 +22,7 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setLoading(true);
         try {
             const response = await fetch('http://localhost:5000/login', {
                 method: 'POST',
@@ -28,20 +31,20 @@ const Login = () => {
             });
 
             const data = await response.json();
-            
+
             if (response.ok) {
-                console.log(data)
+                // console.log(data)
                 const token = data.token;
                 localStorage.setItem('token', token);
                 const user = data.user;
-                console.log('Login user:', user);
+                // console.log('Login user:', user);
                 localStorage.setItem('user', JSON.stringify(user));
 
                 login({ ...data.user });
 
-                navigate(`/user-dashboard?id=${user.userId}`)
+                navigate(`/user-dashboard?id=${user.userId}`);
 
-                alert(data.message);
+                // alert(data.message);
                 // Redirect to dashboard or home page
             } else {
                 alert(data.message || 'Login failed');
@@ -49,11 +52,13 @@ const Login = () => {
         } catch (error) {
             console.error('Error:', error);
             alert('Login failed');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-pink-500 to-orange-500">
+        <div className="flex justify-center items-center min-h-screen bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
                 <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Login</h2>
                 <form id="loginForm" className="space-y-4" onSubmit={handleSubmit}>
@@ -62,7 +67,7 @@ const Login = () => {
                         id="aadhar"
                         placeholder="Aadhar Number"
                         required
-                        className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        className="w-full p-3 border border-gray-400 rounded focus:outline-none focus:border-blue-500"
                         value={formData.aadhar}
                         onChange={handleChange}
                     />
@@ -71,13 +76,14 @@ const Login = () => {
                         id="password"
                         placeholder="Password"
                         required
-                        className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        className="w-full p-3 border border-gray-400 rounded focus:outline-none focus:border-blue-500"
                         value={formData.password}
                         onChange={handleChange}
                     />
-                    <button type="submit" className="w-full p-3 bg-pink-500 text-white font-bold rounded hover:bg-pink-600">
+                    {loading ? <p className="text-gray-700 flex items-center justify-center text-2xl">Loading ...</p>
+                    : <button type="submit" className="w-full p-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
                         Login
-                    </button>
+                    </button>}
                     <div className="text-center mt-4">Dont have an account?&nbsp;
                         <a href="/" className="text-blue-500 hover:text-blue-700">
                             Register

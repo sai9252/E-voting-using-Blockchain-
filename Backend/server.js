@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import express from 'express';
 import mysql from 'mysql2/promise'; // Use mysql2/promise for async/await support
 import bodyParser from 'body-parser';
@@ -10,13 +11,6 @@ import path from 'path';
 import dotenv from 'dotenv';
 import mime from 'mime-types'; // Ensure you install it: npm install mime-types
 import fs from 'fs';
-
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 dotenv.config();
 
 const app = express();
@@ -68,7 +62,7 @@ const connectToDatabase = async () => {
             password: '0000', // Replace with your MySQL password
             database: 'e_voting',
         });
-        
+
         console.log('Connected to MySQL database');
         await db.connect();
         return db;
@@ -81,7 +75,7 @@ const connectToDatabase = async () => {
 const db = await connectToDatabase();
 
 // Storage for uploaded files
-const uploadDir = path.join(__dirname, "uploads");
+const uploadDir = path.join("uploads");
 
 
 // Configure multer for file uploads
@@ -224,13 +218,13 @@ app.post('/adminlogin', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign({ id: admin.id, role: 'ADMIN' }, JWT_SECRET, {
-            expiresIn: '1h', // Token expires in 1 hour
+            expiresIn: '7d', // Token expires in 7 days
         });
 
         res.status(200).json({
             message: 'Login successful',
             token,
-            user: { name: admin.name, email: admin.email, role: 'ADMIN' },
+            user: { adminId: admin.id, name: admin.name, email: admin.email, role: 'ADMIN' },
         });
 
     } catch (err) {
@@ -241,30 +235,37 @@ app.post('/adminlogin', async (req, res) => {
 
 // Candidate Routes
 
-// POST a new candidate
-app.post('/candidates', async (req, res) => {
+app.post('/candidates/:electionId', async (req, res) => {
     const { name, party } = req.body;
+    const { electionId } = req.params;
 
     try {
-        const query = 'INSERT INTO candidates (name, party) VALUES (?, ?)';
-        const [result] = await db.query(query, [name, party]);
-        const newCandidate = {
+        const query = 'INSERT INTO candidates (name, party, election_id) VALUES (?, ?, ?)';
+        const [result] = await db.query(query, [name, party, electionId]);
+
+        res.status(201).json({
             id: result.insertId,
             name,
             party,
-        };
-        res.status(201).json(newCandidate);
+            election_id: electionId
+        });
     } catch (err) {
         console.error('Error adding candidate:', err);
         res.status(500).json({ message: 'Failed to add candidate', error: err.message });
     }
 });
 
-// GET all candidates
-app.get('/get-candidates', async (req, res) => {
+
+// GET all candidates for a specific election
+app.get('/get-candidates/:electionId', async (req, res) => {
+    const { electionId } = req.params;
+
     try {
-        const query = 'SELECT * FROM candidates';
-        const [results] = await db.query(query);
+        const query = 'SELECT * FROM candidates WHERE election_id = ?';
+        const [results] = await db.query(query, [electionId]);
+        // const electionCandidates = candidates.filter(candidate => candidate.electionId === electionId);
+        // res.json(electionCandidates);
+
         res.status(200).json(results);
     } catch (err) {
         console.error('Error fetching candidates:', err);
@@ -272,14 +273,14 @@ app.get('/get-candidates', async (req, res) => {
     }
 });
 
-
-// DELETE a candidate by ID
-app.delete('/delete-candidates/:id', async (req, res) => {
-    const { id } = req.params;
+//delete a candidate from a election
+app.delete('/delete-candidates/:electionId/:id', async (req, res) => {
+    const { electionId, id } = req.params;
 
     try {
-        const query = 'DELETE FROM candidates WHERE id = ?';
-        const [result] = await db.query(query, [id]);
+        const query = 'DELETE FROM candidates WHERE id = ? AND election_id = ?';
+        const [result] = await db.query(query, [id, electionId]);
+
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Candidate not found' });
         }
@@ -291,28 +292,33 @@ app.delete('/delete-candidates/:id', async (req, res) => {
 });
 
 
-// GET all candidates with votes
-app.get('/get-result-candidates', async (req, res) => {
+// GET candidates and their votes for a specific election
+app.get('/get-result-candidates/:electionId', async (req, res) => {
+    const { electionId } = req.params;
+
     try {
-        const query = 'SELECT id, name, party, votes FROM candidates';
-        const [results] = await db.query(query);
+        const query = 'SELECT id, name, party, votes FROM candidates WHERE election_id = ?';
+        const [results] = await db.query(query, [electionId]);
+
         res.status(200).json(results);
     } catch (err) {
-        console.error('Error fetching candidates:', err);
-        res.status(500).json({ message: 'Failed to fetch candidates', error: err.message });
+        console.error('Error fetching election results:', err);
+        res.status(500).json({ message: 'Failed to fetch election results', error: err.message });
     }
 });
 
 // POST a vote
 app.post('/vote', async (req, res) => {
-    const { candidateId, aadhar } = req.body;
+    const { candidateId, aadhar, electionId } = req.body;
 
     try {
         // Check if the user has already voted
-        const checkVoteQuery = 'SELECT * FROM votes WHERE aadhar = ?';
-        const [existingVotes] = await db.query(checkVoteQuery, [aadhar]);
+        // await connection.beginTransaction(); 
+        const checkVoteQuery = 'SELECT * FROM votes WHERE aadhar = ? AND election_id = ?';
+        const [existingVotes] = await db.query(checkVoteQuery, [aadhar, electionId]);
 
         if (existingVotes.length > 0) {
+            // await electionId.rollback();
             return res.status(400).json({ message: 'You have already voted' });
         }
 
@@ -325,8 +331,8 @@ app.post('/vote', async (req, res) => {
         }
 
         // Record the user's vote
-        const insertVoteQuery = 'INSERT INTO votes (aadhar, candidate_id) VALUES (?, ?)';
-        const [insertResult] = await db.query(insertVoteQuery, [aadhar, candidateId]);
+        const insertVoteQuery = 'INSERT INTO votes (aadhar, candidate_id, election_id) VALUES (?,?,?)';
+        const [insertResult] = await db.query(insertVoteQuery, [aadhar, candidateId, electionId]);
 
         res.status(200).json({ message: 'Vote submitted successfully', insertResult });
     } catch (err) {
@@ -336,12 +342,12 @@ app.post('/vote', async (req, res) => {
 });
 
 // GET check if a user has voted
-app.get('/check-vote/:aadhar', async (req, res) => {
-    const { aadhar } = req.params;
+app.get('/check-vote/:aadhar/:electionId', async (req, res) => {
+    const { aadhar, electionId } = req.params;
 
     try {
-        const query = 'SELECT * FROM votes WHERE aadhar = ?';
-        const [results] = await db.query(query, [aadhar]);
+        const query = 'SELECT * FROM votes WHERE aadhar = ? AND election_id = ?';
+        const [results] = await db.query(query, [aadhar, electionId]);
 
         const hasVoted = results.length > 0;
         res.status(200).json({ hasVoted });
@@ -350,6 +356,7 @@ app.get('/check-vote/:aadhar', async (req, res) => {
         res.status(500).json({ message: 'Failed to check voting status', error: err.message });
     }
 });
+
 
 // OTP generation and verification
 app.post('/send-otp', async (req, res) => {
@@ -428,7 +435,7 @@ app.post('/verify-otp', async (req, res) => {
 
 
 // Get all users data
-app.get('/users', async (req, res) => {
+app.get('/users', authenticateJWT, async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM users');
         res.json(rows);
@@ -440,7 +447,7 @@ app.get('/users', async (req, res) => {
 // Get user by id
 app.get('/users/:id', authenticateJWT, async (req, res) => {
     // console.log(req.user)
-    if(req.user.id != req.params.id){
+    if (req.user.id != req.params.id) {
         return res.status(403).send('Unauthorized');
     }
     try {
@@ -526,6 +533,7 @@ app.get('/users/download/:filename', (req, res) => {
 // });
 
 // API to get all elections
+// API to fetch all elections
 app.get('/get-electionsInfo', async (req, res) => {
     try {
         const sql = 'SELECT * FROM elections';
@@ -533,22 +541,141 @@ app.get('/get-electionsInfo', async (req, res) => {
         res.status(200).json(results);
     } catch (error) {
         console.error('Error fetching elections:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
+
 
 // API to add a new election
 app.post('/add-elections', async (req, res) => {
     try {
         const { electionName, start_datetime } = req.body;
+
+        if (!electionName || !start_datetime) {
+            return res.status(400).json({ message: 'Both electionName and start_datetime are required' });
+        }
+
         const sql = 'INSERT INTO elections (electionName, start_datetime) VALUES (?, ?)';
-        const result = await db.query(sql, [electionName, start_datetime]);
-        res.status(200).json({ message: 'Election added successfully', id: result.insertId });
+        const [result] = await db.query(sql, [electionName, start_datetime]);
+
+        res.status(201).json({ message: 'Election added successfully', id: result.insertId });
     } catch (error) {
         console.error('Error adding election:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
+
+// API to delete an election
+app.delete('/delete-election/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const query = 'DELETE FROM elections WHERE id = ?';
+        const [result] = await db.query(query, [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Election not found' });
+        }
+
+        res.status(200).json({ message: 'Election deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting election:', err);
+        res.status(500).json({ message: 'Failed to delete election', error: err.message });
+    }
+});
+
+// Get candidates for an election
+app.get('/get-result-candidates/:id', async (req, res) => {
+    try {
+        const sql = 'SELECT * FROM candidates WHERE electionId = ?';
+        const [candidates] = await db.query(sql, [req.params.id]);
+
+        res.status(200).json(candidates);
+    } catch (err) {
+        console.error('Error fetching candidates:', err);
+        res.status(500).json({ error: 'Failed to fetch candidates', details: err.message });
+    }
+});
+
+// check - results - published
+app.get('/check-results-published/:id', async (req, res) => {
+    try {
+        console.log(`Checking results for electionId: ${req.params.id}`);
+
+        const sql = 'SELECT isPublished FROM elections WHERE id = ?';
+        const [rows] = await db.query(sql, [req.params.id]);
+
+        if (rows.length === 0) {
+            console.log(`No election found for ID: ${req.params.id}`);
+            return res.json({ isPublished: false });
+        }
+
+        console.log(`Election found: ${rows[0]}`);
+        res.status(200).json({ isPublished: rows[0].isPublished });
+    } catch (error) {
+        console.error('Error checking if results are published:', error);
+        res.status(500).json({ error: 'Failed to check publication status', details: error.message });
+    }
+});
+
+
+
+// Publish results
+app.post('/publish-results/:id', async (req, res) => {
+    try {
+        const { isPublished } = req.body;
+
+        const [rows] = await db.query('SELECT * FROM elections WHERE id = ?', [req.params.id]);
+
+        if (rows.length === 0) {
+            res.status(500).json({ error: 'election id not found'});
+            return
+        } else {
+            await db.query('UPDATE elections SET isPublished = ? WHERE id = ?', [isPublished, req.params.id]);
+        }
+
+        res.status(200).json({ message: 'Results published successfully' });
+    } catch (err) {
+        console.error('Error publishing results:', err);
+        res.status(500).json({ error: 'Failed to publish results', details: err.message });
+    }
+});
+
+// Fetch election results
+app.get('/election-results/:electionId', async (req, res) => {
+    const { electionId } = req.params;
+
+    try {
+        // Fetch total registered users
+        const [totalRegisteredUsersResult] = await db.query('SELECT COUNT(*) as totalRegisteredUsers FROM users');
+        const totalRegisteredUsers = totalRegisteredUsersResult[0].totalRegisteredUsers;
+
+        // Fetch total votes
+        const [totalVotesResult] = await db.query('SELECT COUNT(*) as totalVoted FROM votes WHERE election_id = ?', [electionId]);
+        const totalVoted = totalVotesResult[0].totalVoted;
+
+        // Fetch votes per party
+        const [partyVotesResult] = await db.query(
+            'SELECT c.party, SUM(c.votes) as totalVotes FROM candidates c JOIN elections e ON c.election_id = e.id WHERE e.id = ? GROUP BY c.party',
+            [electionId]
+        );
+
+        const partyVotes = partyVotesResult.map(row => ({
+            party: row.party,
+            totalVotes: row.totalVotes,
+        }));
+
+        res.status(200).json({
+            totalRegisteredUsers,
+            totalVoted,
+            partyVotes,
+        });
+    } catch (err) {
+        console.error('Error fetching election results:', err);
+        res.status(500).json({ message: 'Failed to fetch election results', error: err.message });
+    }
+});
+
 
 // Start the server
 app.listen(port, () => {

@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import moment from "moment";
+import "moment-timezone";
+
+const convertToIndianTime = (datetime) => {
+    return moment(datetime).tz('Asia/Kolkata').format('DD-MM-YYYY -- HH:mm A');
+};
 
 function UserDashboard() {
     const [searchParams] = useSearchParams();
@@ -8,6 +14,8 @@ function UserDashboard() {
     const [users, setUsers] = useState(null);
     const [error, setError] = useState("");
     const [elections, setElections] = useState([]);
+    const [loadingElectionId, setLoadingElectionId] = useState(null); // Track loading state for elections
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchUserDetails();
@@ -16,38 +24,54 @@ function UserDashboard() {
 
     const formatDate = (date) => {
         if (!date) return "N/A";
-        const currentDate = new Date(date);
-
-        return currentDate.toLocaleString("en-IN")
+        return new Date(date).toLocaleString("en-IN");
     };
 
     const fetchUserDetails = async () => {
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
         try {
-            console.log(userId)
             if (userId) {
-                const response = await axios.get(`http://localhost:5000/users/${userId}`,{
-                    headers:{
-                        "Authorization":`Bearer ${token}`
-                    }
+                const response = await axios.get(`http://localhost:5000/users/${userId}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
                 });
-                console.log("Fetched User Data:", response); // Log user data
                 setUsers({ ...response.data });
             }
         } catch (error) {
             console.error("Error fetching user details:", error);
-            setError(error?.response.data);
+            setError(error?.response?.data);
         }
     };
-    
 
     const fetchElections = async () => {
         try {
             const response = await axios.get(`http://localhost:5000/get-electionsInfo`);
-            console.log(response.data);
             setElections(response.data);
         } catch (error) {
             console.error("Error fetching elections:", error);
+        }
+    };
+
+    // 🔹 Handle Vote Button Click
+    const makeVote = (electionId) => {
+        if (users && users.verified) {
+            setLoadingElectionId(electionId); // Show loading for clicked election
+            setTimeout(() => {
+                navigate(`/vote/${electionId}`);
+            }, 1000); // 1-second delay for better UI
+        } else {
+            alert("You must be verified to vote.");
+        }
+    };
+
+    // 🔹 Handle Results Button Click
+    const checkResults = (electionId) => {
+        if (users && users.verified) {
+            setLoadingElectionId(electionId); // Show loading for clicked election
+            setTimeout(() => {
+                navigate(`/results/${electionId}`);
+            }, 1000); // 1-second delay for better UI
+        } else {
+            alert("You must be verified to vote.");
         }
     };
 
@@ -63,28 +87,46 @@ function UserDashboard() {
                     <div className="mb-6">
                         <h3 className="text-xl font-semibold text-gray-800 mb-2">Elections</h3>
                         {elections.length > 0 ? (
-                            <table className="w-full border-collapse border border-gray-300">
+                            <table className="w-full border-collapse border border-gray-300 shadow-md">
                                 <thead>
                                     <tr className="bg-gray-200">
-                                        <th className="border border-gray-300 px-4 py-2">ID</th>
-                                        <th className="border border-gray-300 px-4 py-2">Election Name</th>
-                                        <th className="border border-gray-300 px-4 py-2">Start Date</th>
-                                        <th className="border border-gray-300 px-4 py-2">Action</th>
+                                        <th className="border border-gray-300 px-6 py-3 text-center">ID</th>
+                                        <th className="border border-gray-300 px-6 py-3 text-center">Election Name</th>
+                                        <th className="border border-gray-300 px-6 py-3 text-center">Start Date</th>
+                                        <th className="border border-gray-300 px-6 py-3 text-center">Action</th>
+                                        <th className="border border-gray-300 px-6 py-3 text-center">Results</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {elections.map((election, index) => (
                                         <tr key={election.id} className="border border-gray-300">
-                                            <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
-                                            <td className="border border-gray-300 px-4 py-2">{election.electionName}</td>
-                                            <td className="border border-gray-300 px-4 py-2">{formatDate(election.start_datetime)}</td>
-                                            <td className="border border-gray-300 px-4 py-2">
+                                            <td className="border border-gray-300 px-6 py-2 text-center">{index + 1}</td>
+                                            <td className="border border-gray-300 px-6 py-2 text-center">{election.electionName}</td>
+                                            <td className="border border-gray-300 px-6 py-2 text-center">
+                                                {convertToIndianTime(election.start_datetime)}
+                                            </td>
+                                            <td className="border border-gray-300 px-6 py-2 text-center">
                                                 <button
-                                                    disabled={!users.verified}
-                                                    onClick={() => console.log("Right to vote clicked for", election.electionName)}
-                                                    className={`bg-green-600 text-white px-4 py-1.5 rounded hover:bg-green-700 transition ${!users.verified ? 'cursor-not-allowed opacity-50' : ''}`}
+                                                    disabled={!users.verified || loadingElectionId === election.id}
+                                                    onClick={() => makeVote(election.id)}
+                                                    className={`bg-green-500 text-white px-6 py-2 rounded-lg transition duration-200 ease-in-out ${!users.verified || loadingElectionId === election.id
+                                                            ? 'cursor-not-allowed opacity-50'
+                                                            : 'hover:bg-green-600 cursor-pointer'
+                                                        }`}
                                                 >
-                                                    Click to Vote
+                                                    {loadingElectionId === election.id ? "Loading..." : "Vote"}
+                                                </button>
+                                            </td>
+                                            <td className="border border-gray-300 px-6 py-2 text-center">
+                                                <button
+                                                    disabled={!users.verified || loadingElectionId === election.id}
+                                                    onClick={() => checkResults(election.id)}
+                                                    className={`bg-blue-500 text-white px-4 py-2 rounded-lg transition duration-200 ease-in-out ${!users.verified || loadingElectionId === election.id
+                                                            ? 'cursor-not-allowed opacity-50'
+                                                            : 'hover:bg-blue-600 cursor-pointer'
+                                                        }`}
+                                                >
+                                                    {loadingElectionId === election.id ? "Loading..." : "Results"}
                                                 </button>
                                             </td>
                                         </tr>

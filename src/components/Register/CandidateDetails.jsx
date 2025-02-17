@@ -27,19 +27,28 @@ function UserDetails() {
     };
 
     const fetchUserDetails = async () => {
+        const token = localStorage.getItem('token')
         try {
-            const response = await axios.get(`http://localhost:5000/users/${userId}`);
+            const response = await axios.get(`http://localhost:5000/users/${userId}`,{
+                headers:{
+                    "Authorization":`Bearer ${token}`
+                }
+            });
             setUser(response.data);
         } catch (error) {
             console.error("Error fetching user details:", error);
         }
     };
-
+    
     const handleDownload = async (filename) => {
         console.log(filename.split("\\")[1])
         filename = filename.split("\\")[1]
+        const token = localStorage.getItem('token')
         try {
             const response = await axios.get(`http://localhost:5000/users/download/${filename}`, {
+                headers:{
+                    "Authorization":`Bearer ${token}`
+                },
                 responseType: "blob",
             });
 

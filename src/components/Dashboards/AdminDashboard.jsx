@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function AdminDashboard() {
     const [candidates, setCandidates] = useState([]);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
+    const [error,setError] = useState('')
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -15,12 +16,19 @@ function AdminDashboard() {
 
     const fetchCandidates = async () => {
         setLoading(true);
+        const token = localStorage.getItem("token")
         // wait for 2 seconds
         try {
-            const response = await axios.get("http://localhost:5000/users");
+            const response = await axios.get("http://localhost:5000/users",{
+                headers:{
+                    "Authorization":`Bearer ${token}`
+                }
+            });
+            
             setCandidates(response.data);
         } catch (error) {
             console.error("Error fetching candidates:", error);
+            setError(error?.response.data);
         }
         finally {
             // setTimeout(() => {
@@ -125,6 +133,7 @@ function AdminDashboard() {
                     </div>
                 </div>
             )}
+            {error && <p className="text-gray-700">{error}</p>}
         </div>
     );
 }
