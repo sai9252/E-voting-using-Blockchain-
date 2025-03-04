@@ -67,4 +67,5 @@ router.delete('/delete-candidates/:electionId/:id', async (req, res) => {
 });
 
 
+
 module.exports = router;

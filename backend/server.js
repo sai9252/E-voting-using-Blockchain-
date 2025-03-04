@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 const app = express();
@@ -16,6 +17,26 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 
+// MySQL Connection
+const connectToDatabase = async () => {
+    try {
+        const db = await mysql.createConnection({
+            host: 'localhost',
+            user: 'root', // Replace with your MySQL username
+            password: '0000', // Replace with your MySQL password
+            database: 'e_voting',
+        });
+
+        console.log('Connected to MySQL database');
+        await db.connect();
+        return db;
+    } catch (err) {
+        console.error('Error connecting to MySQL:', err);
+        throw err;
+    }
+};
+
+connectToDatabase();
 
 
 
@@ -31,8 +52,8 @@ const candidateRoute = require('./routes/candidateRoute');
 
 // blockchain
 const electionsRoute = require('./routes/electionsRoute');
-const publishRoute = require('./routes/publishRoute');
 const voteRoute = require('./routes/voteRoute');
+const publishRoute = require('./routes/publishRoute');
 
 app.use('/api', fileRoutes);
 app.use('/api', verifyRoute);

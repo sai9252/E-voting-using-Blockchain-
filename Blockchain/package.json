@@ -2,7 +2,7 @@
   "name": "hardhat-project",
 
   "scripts": {
-    "deploy":"npx hardhat ignition deploy ./ignition/modules/deploy.js --network localhost",
+    "deploy":"npx hardhat ignition deploy ./ignition/modules/deploy.js --network ganache",
     "start":"npx hardhat node",
     "compile":"npx hardhat compile"
   },

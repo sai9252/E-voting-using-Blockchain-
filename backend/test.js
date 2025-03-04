@@ -39,8 +39,8 @@ async function test() {
         const network = await provider.getNetwork();
         console.log("Connected to network:", network);
         console.log(votingContract.address);
-        const election = await votingContract.getElection(25);
-        console.log("Election details:", election);
+        // const election = await votingContract.getElection(25);
+        // console.log("Election details:", election);
     } catch (error) {
         console.error("Test failed:", error);
     }

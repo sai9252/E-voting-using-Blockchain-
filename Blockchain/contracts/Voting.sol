@@ -57,14 +57,15 @@ contract Voting {
     function vote(
         uint256 electionId,
         uint256 candidateId,
-        string memory aadhar
+        string memory aadhar,
+        uint256 currentTime
     ) external electionExists(electionId) {
         require(
-            block.timestamp >= elections[electionId].startTime,
+            currentTime >= elections[electionId].startTime,
             "Election has not started"
         );
         require(
-            block.timestamp <= elections[electionId].endTime,
+            currentTime <= elections[electionId].endTime,
             "Election has ended"
         );
         require(
@@ -72,15 +73,15 @@ contract Voting {
             "Already voted in this election"
         );
         
-        elections[electionId].candidateVotes[candidateId]++;
+        elections[electionId].candidateVotes[candidateId]++ ;
         hasVoted[aadhar][electionId] = true;
         
         emit VoteCast(electionId, candidateId);
     }
     
-    function publishResults(uint256 electionId) external electionExists(electionId) {
+    function publishResults(uint256 electionId, uint256 currentTime) external electionExists(electionId) {
         require(
-            block.timestamp > elections[electionId].endTime,
+            currentTime > elections[electionId].endTime,
             "Election is still ongoing"
         );
         require(

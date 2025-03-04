@@ -2,9 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const connectToDatabase = require('../utils/dbConnect');
-
 const JWT_SECRET = 'a'
-
 // write jwt middleware
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -16,7 +14,7 @@ const authenticateJWT = (req, res, next) => {
             if (err) {
                 return res.sendStatus(403);
             }
-
+            console.log('User authenticated:', user);
             req.user = user;
             next();
         });
@@ -41,10 +39,8 @@ router.get('/users', authenticateJWT, async (req, res) => {
 router.get('/users/:id', authenticateJWT, async (req, res) => {
     const db = await connectToDatabase();
 
-    // console.log(req.user)
-    if (req.user.id !== req.params.id) {
-        return res.status(403).send('Unauthorized');
-    }
+    // console.log( req.user.id)
+    // console.log( req.params.id)
     try {
         const [rows] = await db.execute('SELECT * FROM users WHERE id = ?', [req.params.id]);
         if (rows.length === 0) return res.status(404).send('User not found');
@@ -62,7 +58,7 @@ router.put('/users/:id/verify', async (req, res) => {
     try {
         const [result] = await db.query('UPDATE users SET verified = 1 WHERE id = ?', [req.params.id]);
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Candidate not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
         const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
         res.json(rows[0]); // Return updated user data
@@ -70,5 +66,20 @@ router.put('/users/:id/verify', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+router.put('/users/:id/reject', async (req, res) => {
+    const db = await connectToDatabase();
+
+    try {
+        const [result] = await db.query('UPDATE users SET verified = -1 WHERE id = ?', [req.params.id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ message: 'User rejected successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 module.exports = router;

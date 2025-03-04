@@ -225,6 +225,11 @@ const abi =[
         "internalType": "uint256",
         "name": "electionId",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentTime",
+        "type": "uint256"
       }
     ],
     "name": "publishResults",
@@ -248,6 +253,11 @@ const abi =[
         "internalType": "string",
         "name": "aadhar",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentTime",
+        "type": "uint256"
       }
     ],
     "name": "vote",

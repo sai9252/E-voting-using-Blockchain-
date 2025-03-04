@@ -7,9 +7,9 @@ async function initializeEthereum() {
     try {
         // Configure provider with network settings
         const provider = new ethers.providers.JsonRpcProvider(
-            process.env.RPC_URL || "http://127.0.0.1:8545/",
+            process.env.ETHEREUM_RPC_URL,
             {
-                chainId: 31337,
+                chainId: 1337,
                 name: 'localhost',
                 ensAddress: null
             }
@@ -23,8 +23,7 @@ async function initializeEthereum() {
         });
 
         // Initialize wallet with private key from env or default Hardhat account
-        const privateKey = process.env.PRIVATE_KEY || 
-            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+        const privateKey = process.env.PRIVATE_KEY ;
         const wallet = new ethers.Wallet(privateKey, provider);
 
         // Get wallet address and balance
@@ -34,9 +33,8 @@ async function initializeEthereum() {
         console.log("Balance:", ethers.utils.formatEther(balance), "ETH");
 
         // Initialize contract with address from env or deployed contract
-        const contractAddress = process.env.CONTRACT_ADDRESS || 
-            "0xa196769ca67f4903eca574f5e76e003071a4d84a";
-        
+        const contractAddress = process.env.CONTRACT_ADDRESS
+
         if (!contractAddress) {
             throw new Error("Contract address not provided");
         }
@@ -77,15 +75,15 @@ async function initializeEthereum() {
 async function test() {
     try {
         const { provider, wallet, votingContract } = await initializeEthereum();
-        
+
         // Test contract interaction
         console.log("\nTesting contract interaction...");
-        
+
         // Create test election
         const electionId = 1;
         const now = Math.floor(Date.now() / 1000);
         const startTime = now + 3600; // Start in 1 hour
-        const endTime = startTime + (7 * 24 * 60 * 60); // 7 days duration
+        const endTime = startTime + (24 * 60 * 60); // 7 days duration
 
         console.log("Creating test election:", {
             electionId,
@@ -96,11 +94,11 @@ async function test() {
         const tx = await votingContract.createElection(electionId, startTime, endTime);
         await tx.wait();
         // const tx = await votingContract.elections();
-        console.log("Test election created successfully",tx);
+        console.log("Test election created successfully", tx);
 
     } catch (error) {
         console.error("Test failed:", error);
-        
+
         if (error.code === 'CALL_EXCEPTION') {
             console.error("Contract call failed. Details:", {
                 address: error.address,
