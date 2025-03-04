@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import express from 'express';
 import mysql from 'mysql2/promise'; // Use mysql2/promise for async/await support
 import bodyParser from 'body-parser';
@@ -7,10 +6,11 @@ import twilio from 'twilio';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken'; // Import jsonwebtoken
 import multer from 'multer';
-import path from 'path';
 import dotenv from 'dotenv';
 import mime from 'mime-types'; // Ensure you install it: npm install mime-types
 import fs from 'fs';
+// import ethers from 'hardhat';
+import path from 'path';
 dotenv.config();
 
 const app = express();
@@ -23,6 +23,7 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 // const twilioClient = twilio(accountSid, authToken);
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
 
 // Middleware
 app.use(cors());
@@ -617,8 +618,6 @@ app.get('/check-results-published/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to check publication status', details: error.message });
     }
 });
-
-
 
 // Publish results
 app.post('/publish-results/:id', async (req, res) => {

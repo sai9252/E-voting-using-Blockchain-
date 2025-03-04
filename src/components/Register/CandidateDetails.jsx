@@ -28,10 +28,14 @@ function UserDetails() {
 
     const fetchUserDetails = async () => {
         const token = localStorage.getItem('token')
+        if (!token) {
+            console.error('No token found');
+            return;
+        }
         try {
-            const response = await axios.get(`http://localhost:5000/users/${userId}`,{
-                headers:{
-                    "Authorization":`Bearer ${token}`
+            const response = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
                 }
             });
             setUser(response.data);
@@ -39,35 +43,49 @@ function UserDetails() {
             console.error("Error fetching user details:", error);
         }
     };
-    
-    const handleDownload = async (filename) => {
-        console.log(filename.split("\\")[1])
-        filename = filename.split("\\")[1]
-        const token = localStorage.getItem('token')
+
+    const handleDownload = async (filePath) => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found');
+            return;
+        }
+        
         try {
-            const response = await axios.get(`http://localhost:5000/users/download/${filename}`, {
-                headers:{
-                    "Authorization":`Bearer ${token}`
+            // Extract the filename from the path using a more robust method
+            // This will work with both forward and backward slashes
+            const parts = filePath.split(/[/\\]/);
+            const filename = parts[parts.length - 1];
+            
+            console.log("Attempting to download:", filename);
+            
+            const response = await axios.get(`http://localhost:5000/api/users/download/${filename}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
                 },
                 responseType: "blob",
             });
 
+            // Create a download link
             const blob = new Blob([response.data]);
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
             link.setAttribute("download", filename);
+            
+            // Append, click, and clean up
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Error downloading file:", error);
+            alert("Failed to download file. Please try again.");
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="min-h-screen flex items-center justify-center ">
             {user ? (
                 <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-lg flex flex-col">
                     <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
@@ -82,8 +100,8 @@ function UserDetails() {
                         <p><strong>Aadhar Number:</strong> {user.aadhar}</p>
                         <p><strong>Date of Birth:</strong> {formatDate(user.dateOfBirth)}</p>
                         <p className="text-green-600 font-bold">
-                            {user.verified ? "Verified ✅" : "Not Verified ❌"}
-                        </p>
+                                {user ? (user.verified === 1 ? "Verified ✅" : user.verified === -1 ? "Rejected ❌" : "Not Verified ❌") : "Loading..."}
+                            </p>
                     </div>
 
                     {/* Downloadable & Viewable Documents */}

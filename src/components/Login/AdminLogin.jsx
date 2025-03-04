@@ -1,7 +1,9 @@
 // AdminLogin.js
 import { useContext, useState } from 'react';
 import { AuthContext } from '../AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AdminLogin = () => {
     const [formData, setFormData] = useState({
@@ -9,8 +11,8 @@ const AdminLogin = () => {
         password: '',
     });
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
     const { login } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -20,7 +22,7 @@ const AdminLogin = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/adminlogin', {
+            const response = await fetch('http://localhost:5000/api/adminlogin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -37,16 +39,16 @@ const AdminLogin = () => {
 
                 login({ ...data.user });
 
-                navigate(`/admin-dashboard?id=${user.adminId}`);
-                
+                navigate(`/admin-dashboard?id=${user.adminId}&adminLoginSuccess=true`);
+
                 // alert(data.message);
                 // Redirect to dashboard or home page
             } else {
-                alert(data.message || 'AdminLogin failed');
+                toast.error(data.message || 'AdminLogin failed');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('AdminLogin failed');
+            toast.error('AdminLogin failed');
         }
         finally {
             setLoading(false);
@@ -54,7 +56,8 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <div className="flex justify-center items-center min-h-screen">
+            <ToastContainer position="top-center" autoClose={2000} />
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
                 <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Admin Login</h2>
                 <form id="AdminLoginForm" className="space-y-4" onSubmit={handleSubmit}>
@@ -77,9 +80,9 @@ const AdminLogin = () => {
                         onChange={handleChange}
                     />
                     {loading ? <p className="text-gray-700 flex items-center justify-center text-2xl">Loading ...</p>
-                    :<button type="submit" className="w-full p-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
-                        Admin Login
-                    </button>}
+                        : <button type="submit" className="w-full p-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
+                            Admin Login
+                        </button>}
                 </form>
             </div>
         </div>

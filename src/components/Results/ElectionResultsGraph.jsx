@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import {
     BarChart,
     Bar,
@@ -10,52 +8,27 @@ import {
     Legend,
     ResponsiveContainer,
 } from "recharts";
+import PropTypes from 'prop-types';
 
-const ElectionResultsGraph = () => {
-    const { electionId } = useParams();
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchResults = async () => {
-            try {
-                const response = await fetch(
-                    `http://localhost:5000/election-results/${electionId}`
-                );
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const result = await response.json();
-                setData(result);
-            } catch (error) {
-                console.error("Error fetching results:", error);
-                setError(error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
 
-        fetchResults();
-    }, [electionId]);
 
-    if (loading) return <div className="text-center">Loading...</div>;
-    if (error)
-        return <div className="text-center text-red-500">Error: {error}</div>;
+// props = {data:<value>}
+const ElectionResultsGraph = ({data}) => {
+
     if (!data)
         return <div className="text-center text-red-500">No data found</div>;
 
     // Calculate total votes dynamically
-    const sumOfAllVotes = data.partyVotes.reduce((sum, { totalVotes }) => sum + parseInt(totalVotes), 0) || 1;
-    console.log(sumOfAllVotes);
-    console.log(typeof sumOfAllVotes);
-
+    const sumOfAllVotes = data.reduce((sum, { votes }) => sum + parseInt(votes), 0) || 1;
+    
     // Recalculate winning percentage based on actual votes
-    const partyVotesData = data.partyVotes.map(({ party, totalVotes }) => ({
+    const partyVotesData = data.map(({ party, votes }) => ({
         name: party,
-        votes: totalVotes,
-        percentage: ((totalVotes / sumOfAllVotes) * 100).toFixed(2), // Proper % calculation
+        votes: votes,
+        percentage: ((votes / sumOfAllVotes) * 100).toFixed(2), // Proper % calculation
     }));
+    console.log(partyVotesData);
 
     return (
         <div className="flex items-center justify-center p-6">
@@ -66,7 +39,7 @@ const ElectionResultsGraph = () => {
                 <ResponsiveContainer width="100%" height={350}>
                     <BarChart data={partyVotesData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" tickMargin={100} />
+                        <XAxis dataKey="name" tickMargin={10} />
                         <YAxis yAxisId="left" orientation="left" allowDecimals={false} />
                         <YAxis
                             yAxisId="right"
@@ -96,5 +69,11 @@ const ElectionResultsGraph = () => {
         </div>
     );
 };
+
+
+ElectionResultsGraph.propTypes = {
+    data: PropTypes.array, // or whatever type your 'data' prop should be
+  };
+
 
 export default ElectionResultsGraph;

@@ -22,7 +22,7 @@ const AdminResultsView = () => {
     const fetchCandidates = async (id) => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/get-result-candidates/${id}`);
+            const response = await fetch(`http://localhost:5000/api/admin-elections-results/${id}`);
             if (response.ok) {
                 const data = await response.json();
                 setCandidates(data);
@@ -38,7 +38,7 @@ const AdminResultsView = () => {
 
     const checkIfResultsPublished = async (id) => {
         try {
-            const response = await fetch(`http://localhost:5000/check-results-published/${id}`);
+            const response = await fetch(`http://localhost:5000/api/check-results-published/${id}`);
             if (response.ok) {
                 const data = await response.json();
                 setIsPublished(data.isPublished);
@@ -53,7 +53,7 @@ const AdminResultsView = () => {
     const handlePublishResults = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/publish-results/${electionId}`, {
+            const response = await fetch(`http://localhost:5000/api/publish-results/${electionId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ const AdminResultsView = () => {
     };
 
     return (
-        <div className="flex justify-center items-center bg-gray-100 min-h-screen w-full">
+        <div className="flex justify-center items-center  min-h-screen w-full">
             <div className="p-8 rounded-lg bg-white shadow-lg w-full max-w-md">
                 {/* Back Button with Loading Effect */}
                 <button
@@ -153,7 +153,7 @@ const AdminResultsView = () => {
                 ):('')}
             </div>
             <div>
-                {<ElectionResultsGraph/>}
+                {candidates && <ElectionResultsGraph data={candidates}/>}
             </div>
         </div>
     );

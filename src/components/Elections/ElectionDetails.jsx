@@ -5,6 +5,8 @@ import moment from 'moment';
 import 'moment-timezone';
 import { useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react'; // Lucide icon for a modern look
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Convert datetime to Indian timezone
 const convertToIndianTime = (datetime) => {
@@ -20,7 +22,7 @@ const ElectionDetails = () => {
 
     const fetchElections = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/get-electionsInfo`);
+            const response = await axios.get(`http://localhost:5000/api/get-electionsInfo`);
             setElections(response.data);
             setLoading(false);
         } catch (error) {
@@ -39,7 +41,7 @@ const ElectionDetails = () => {
     const addElection = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`http://localhost:5000/add-elections`, {
+            const response = await axios.post(`http://localhost:5000/api/add-elections`, {
                 electionName,
                 start_datetime: startDatetime
             });
@@ -48,12 +50,14 @@ const ElectionDetails = () => {
                 electionName,
                 start_datetime: startDatetime
             };
+            toast.success("Election added successfully")
             setElections([...elections, newElection]);
             setElectionName('');
             setStartDatetime('');
         } catch (error) {
             console.error("Error adding election:", error);
-            setError(error.message);
+            // setError(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -64,11 +68,11 @@ const ElectionDetails = () => {
         }
         console.log("Deleting election with ID:", id);
         try {
-            const response = await axios.delete(`http://localhost:5000/delete-election/${id}`);
+            const response = await axios.delete(`http://localhost:5000/api/delete-election/${id}`);
             if (response.status === 200) {
+                toast.success("Election deleted successfully!")
                 const updatedElections = elections.filter((election) => election.id !== id);
                 setElections(updatedElections);
-                alert("Election deleted successfully!");
                 // Refresh or navigate away if needed
             }
 
@@ -76,6 +80,7 @@ const ElectionDetails = () => {
             console.error("Error deleting election:", error);
             if (error.response) {
                 console.error("Server Response:", error.response.data);
+                toast.error(error.response.data)
             }
         }
     };
@@ -85,8 +90,9 @@ const ElectionDetails = () => {
     }, []);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        <div className="min-h-screen flex flex-col items-center justify-center">
             <div className="max-w-4xl w-full p-6 bg-white rounded-lg shadow-lg">
+            <ToastContainer position="top-center" autoClose={2000} />
                 <h1 className="text-3xl font-bold mb-6">Election Details</h1>
                 {loading ? (
                     <p className="text-gray-600">Loading...</p>

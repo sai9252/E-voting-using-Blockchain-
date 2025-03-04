@@ -2,6 +2,8 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import { RiArrowLeftFill } from 'react-icons/ri';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Vote = () => {
     const { user } = useContext(AuthContext);
@@ -15,7 +17,7 @@ const Vote = () => {
 
     const fetchCandidates = useCallback(async () => {
         try {
-            const response = await fetch(`http://localhost:5000/get-candidates/${electionId}`);
+            const response = await fetch(`http://localhost:5000/api/get-candidates/${electionId}`);
             if (response.ok) {
                 const data = await response.json();
                 setCandidates(data);
@@ -30,7 +32,7 @@ const Vote = () => {
     const checkVotingStatus = useCallback(async () => {
         if (!user) return;
         try {
-            const response = await fetch(`http://localhost:5000/check-vote/${user.aadhar}/${electionId}`);
+            const response = await fetch(`http://localhost:5000/api/check-vote/${user.aadhar}/${electionId}`);
             if (response.ok) {
                 const data = await response.json();
                 setHasVoted(data.hasVoted);
@@ -44,17 +46,18 @@ const Vote = () => {
 
     const handleVote = async () => {
         if (!selectedCandidate) {
-            alert('Please select a candidate');
+            toast.warning('Please select a candidate');
             return;
         }
 
         if (hasVoted) {
+            toast.error('You have already voted')
             setVotingMessage('You have already voted');
             return;
         }
 
         try {
-            const response = await fetch('http://localhost:5000/vote', {
+            const response = await fetch('http://localhost:5000/api/vote', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ candidateId: selectedCandidate, aadhar: user.aadhar, electionId }),
@@ -63,6 +66,7 @@ const Vote = () => {
             const data = await response.json();
 
             if (response.ok) {
+                toast.success("You have sucessfully voted")
                 setHasVoted(true);
                 setVotingMessage(data.message);
             } else {
@@ -70,6 +74,7 @@ const Vote = () => {
             }
         } catch (error) {
             console.error('Error submitting vote:', error);
+            toast.error('Failed to Submit vote');
             setVotingMessage('Failed to submit vote');
         }
     };
@@ -78,7 +83,7 @@ const Vote = () => {
         setLoadingBack(true);
         setTimeout(() => {
             navigate(`/user-dashboard?id=${user.userId}`);
-        }, 1000);
+        }, 500);
     };
 
     useEffect(() => {
@@ -90,15 +95,18 @@ const Vote = () => {
     }, [user]);
 
     useEffect(() => {
-        if (hasVoted == 0) {
+        console.log(hasVoted)
+        console.log(hasVoted==0)
+        if (hasVoted) {
             setVotingMessage('You have voted successfully');
         }
 
     }, [hasVoted]);
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100 w-full">
+        <div className="flex justify-center items-center min-h-screen  w-full">
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <ToastContainer position="top-center" autoClose={2000} />
                 <div className="flex items-center mb-4">
                     <button onClick={handleBack} disabled={loadingBack} className="mr-3">
                         <div className={`h-8 w-8 flex items-center justify-center rounded-full shadow-2xs ${loadingBack ? 'bg-gray-400' : 'bg-gray-300'}`}>

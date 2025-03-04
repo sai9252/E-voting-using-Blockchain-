@@ -16,11 +16,14 @@ import Results from './components/Results/Results';
 // import AdminResults from './components/Results/AdminResults';
 import AdminResultsView from './components/Results/AdminResultsView';
 import ElectionResultsGraph from './components/Results/ElectionResultsGraph';
+import EditProfile from './components/Register/EditProfile';
+
 
 const App = () => {
   return (
     <AuthProvider>
       <Router>
+      <div className='bg-custom'>
         <Navbar />
         <Routes>
           <Route path="/" element={<Register />} />
@@ -36,6 +39,7 @@ const App = () => {
       
             {/* <Route path="/results" element={<Results />} /> */}
             <Route path="/user-dashboard" element={<UserDashboard />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/election-dashboard" element={<ElectionDetails />} />
             <Route path="/vote/:electionId" element={<Vote />} />
             <Route path="/results/:electionId" element={<Results />} />
@@ -45,6 +49,7 @@ const App = () => {
             <Route path='/result-graph/:electionId' element={<ElectionResultsGraph/>}/>
 
         </Routes>
+      </div>
       </Router>
     </AuthProvider>
   );

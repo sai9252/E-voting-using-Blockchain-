@@ -22,7 +22,7 @@ const Results = () => {
     const fetchCandidates = async (id) => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/get-result-candidates/${id}`);
+            const response = await fetch(`http://localhost:5000/api/get-results/${id}`);
             if (response.ok) {
                 const data = await response.json();
                 setCandidates(data);
@@ -38,7 +38,7 @@ const Results = () => {
 
     const checkIfResultsPublished = async (id) => {
         try {
-            const response = await fetch(`http://localhost:5000/check-results-published/${id}`);
+            const response = await fetch(`http://localhost:5000/api/check-results-published/${id}`);
             if (response.ok) {
                 const data = await response.json();
                 setIsPublished(data.isPublished);
@@ -59,8 +59,8 @@ const Results = () => {
     };
 
     return (
-        <div className="flex justify-center items-center bg-gray-100 min-h-screen w-full">
-            <div className="p-8 rounded-lg bg-white shadow-lg w-full max-w-md">
+        <div className="flex justify-center items-center  min-h-screen w-full">
+            <div className="p-8 rounded-lg bg-white shadow-lg w-[60%]">
 
                 {/* Back Button with Loading Effect */}
                 {user && user.userId && (
@@ -74,6 +74,11 @@ const Results = () => {
                 )}
 
                 <h2 className="text-2xl font-bold text-center mb-6">Election Results</h2>
+                <br />
+                {candidates && candidates.length>0 && <h2 className="text-2xl font-bold text-center mb-6 ">The Winner is <span className='text-green-500'>
+                    {candidates[0].name} 
+                    </span>
+                    </h2>}
 
                 {/* Show Loading Spinner */}
                 {loading ? (
@@ -81,15 +86,15 @@ const Results = () => {
                 ) : (
                     <div className="mt-6">
                         {isPublished ? (
-                            <div>
-                                <div>
-                                    <h3 className="text-xl font-bold mb-4">Candidates</h3>
-                                    <div className="max-h-64 overflow-y-auto border rounded shadow-md">
+                            <div className='flex '>
+                                <div className='w-[50%] flex flex-col justify-center items-center'>
+                                    <h3 className="text-2xl font-bold mb-4">Candidates</h3>
+                                    <div className="max-h-64 overflow-y-auto border rounded shadow-md w-full">
                                         {candidates.length > 0 ? (
                                             <table className="w-full border-collapse">
                                                 <thead>
                                                     <tr className="border-b bg-gray-200">
-                                                        <th className="p-3 text-left">#</th>
+                                                        <th className="p-3 text-left">SR</th>
                                                         <th className="p-3 text-left">Name</th>
                                                         <th className="p-3 text-left">Party</th>
                                                         <th className="p-3 text-left">Votes</th>
@@ -113,8 +118,8 @@ const Results = () => {
                                         )}
                                     </div>
                                 </div>
-                                <div>
-                                    {<ElectionResultsGraph />}
+                                <div className='w-[50%]'>
+                                    {candidates && <ElectionResultsGraph data={candidates} />}
                                 </div>
                             </div>
                         ) : (

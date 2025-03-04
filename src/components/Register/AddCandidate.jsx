@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaTrashAlt } from 'react-icons/fa';
 import { RiArrowLeftFill } from 'react-icons/ri'; // Importing Back Arrow Icon
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AddCandidate = () => {
     const { electionId } = useParams();
@@ -20,7 +22,7 @@ const AddCandidate = () => {
 
     const fetchCandidates = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/get-candidates/${electionId}`);
+            const response = await fetch(`http://localhost:5000/api/get-candidates/${electionId}`);
             if (response.ok) {
                 const data = await response.json();
                 setCandidates(data);
@@ -41,7 +43,7 @@ const AddCandidate = () => {
             setLoading(true);
 
             try {
-                const response = await fetch(`http://localhost:5000/candidates/${electionId}`, {
+                const response = await fetch(`http://localhost:5000/api/candidates/${electionId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData),
@@ -51,10 +53,11 @@ const AddCandidate = () => {
                     const newCandidate = await response.json();
                     setCandidates([...candidates, newCandidate]);
                     setFormData({ name: '', party: '' });
-
+                    toast.success("Candidate added successfully")
                     window.location.reload();
                 } else {
                     console.error('Failed to add candidate');
+                    toast.error('Failed to add candidate')
                 }
             } catch (error) {
                 console.error('Error adding candidate:', error);
@@ -62,21 +65,23 @@ const AddCandidate = () => {
                 setLoading(false);
             }
         } else {
-            alert('Please fill in both fields');
+            toast.warning('Please fill in both fields');
         }
     };
 
     const handleDeleteCandidate = async (id) => {
         try {
-            const response = await fetch(`http://localhost:5000/delete-candidates/${electionId}/${id}`, {
+            const response = await fetch(`http://localhost:5000/api/delete-candidates/${electionId}/${id}`, {
                 method: 'DELETE',
             });
 
             if (response.ok) {
+                toast.success("Candidate deleted Successfully");
                 const updatedCandidates = candidates.filter(candidate => candidate.id !== id);
                 setCandidates(updatedCandidates);
             } else {
                 console.error('Failed to delete candidate');
+                toast.error('Failed to delete candidate');
             }
         } catch (error) {
             console.error('Error deleting candidate:', error);
@@ -91,9 +96,10 @@ const AddCandidate = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100 w-full">
+        <div className="flex justify-center items-center min-h-screen  w-full">
+            <ToastContainer position="top-center" autoClose={3000} />
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-                
+
                 {/* ✅ Back Button at the Top */}
                 <button
                     onClick={handleBackClick}
@@ -129,7 +135,7 @@ const AddCandidate = () => {
                         value={formData.party}
                         onChange={handleChange}
                     />
-                    
+
                     {/* ✅ Loader button for Adding Candidate */}
                     <button
                         type="button"
